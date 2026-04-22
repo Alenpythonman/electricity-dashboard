@@ -295,6 +295,53 @@ st.markdown(f"""
 # -----------------------------
 # Download
 # -----------------------------
+# -----------------------------
+# Report Summary
+# -----------------------------
+st.subheader("Report Summary")
+
+weekday_mean_kw = filtered_df.loc[filtered_df["IsWeekend"] == False, "Power_kW"].mean()
+weekend_mean_kw = filtered_df.loc[filtered_df["IsWeekend"] == True, "Power_kW"].mean()
+
+if pd.isna(weekday_mean_kw):
+    weekday_mean_kw = 0
+
+if pd.isna(weekend_mean_kw):
+    weekend_mean_kw = 0
+
+if weekend_mean_kw > 0:
+    weekday_vs_weekend_pct = ((weekday_mean_kw - weekend_mean_kw) / weekend_mean_kw) * 100
+else:
+    weekday_vs_weekend_pct = 0
+
+report_summary = f"""
+**Reporting period:** {start_date} to {end_date}
+
+**Load profile overview**
+- Total site energy consumption over the selected period was **{total_energy_kwh:,.0f} kWh**.
+- Average daily energy consumption was **{avg_daily_energy_kwh:,.0f} kWh/day**.
+- Average site demand was **{avg_demand_kw:,.1f} kW**, with a recorded peak demand of **{peak_demand_kw:,.1f} kW** at **{peak_time}**.
+- The estimated base load was **{base_load_kw:,.1f} kW**.
+- Demand percentile review shows **P50 = {p50_kw:,.1f} kW**, **P90 = {p90_kw:,.1f} kW**, **P95 = {p95_kw:,.1f} kW**, and **P99 = {p99_kw:,.1f} kW**.
+
+**Behaviour and operating pattern**
+- The load factor over the selected period was **{load_factor:,.1f}%**, which indicates the relationship between typical and peak demand.
+- Average weekday demand was **{weekday_mean_kw:,.1f} kW** and average weekend demand was **{weekend_mean_kw:,.1f} kW**.
+- This indicates that weekday demand is approximately **{weekday_vs_weekend_pct:,.1f}%** {'higher' if weekday_vs_weekend_pct >= 0 else 'lower'} than weekend demand.
+
+**Battery screening assessment**
+- Using a target demand limit of **{target_limit_kw:,.1f} kW**, the estimated peak reduction potential is **{peak_reduction_kw:,.1f} kW**.
+- The required battery discharge power is estimated at **{required_battery_power_kw:,.1f} kW**.
+- The raw peak shaving energy requirement is **{raw_peak_shaving_energy_kwh:,.1f} kWh**.
+- After applying **{round_trip_efficiency:,.0f}%** round trip efficiency and **{usable_dod:,.0f}%** usable depth of discharge, the estimated installed battery capacity is **{installed_battery_capacity_kwh:,.1f} kWh**.
+- Based on the selected minimum discharge support duration of **{max_discharge_duration_hours:,.1f} hours**, the recommended battery capacity is **{recommended_battery_capacity_kwh:,.1f} kWh**.
+
+**Engineering note**
+- This dashboard provides a screening level assessment for battery selection and peak shaving suitability.
+- Final battery specification should be confirmed using a detailed dispatch study including tariff structure, charge strategy, state of charge limits, efficiency losses, and operational constraints.
+"""
+
+st.markdown(report_summary)
 st.subheader("Download Filtered Data")
 
 csv = filtered_df.to_csv(index=False).encode("utf-8")
