@@ -304,4 +304,3 @@ st.download_button(
     file_name="filtered_thatchers_data.csv",
     mime="text/csv"
 )
-updated dashboard with battery analysis
