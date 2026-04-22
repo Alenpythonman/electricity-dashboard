@@ -224,6 +224,58 @@ with pk1:
 with pk2:
     st.markdown("**Top 10 Half Hourly Peaks**")
     st.dataframe(top_peaks, use_container_width=True)
+    # -----------------------------
+# Demand Heatmap
+# -----------------------------
+st.subheader("Demand Heatmap")
+
+heatmap_metric = st.radio(
+    "Heatmap display",
+    ["Average Power (kW)", "Maximum Power (kW)"],
+    horizontal=True
+)
+
+if heatmap_metric == "Average Power (kW)":
+    heatmap_data = filtered_df.pivot_table(
+        index=filtered_df["DateTime"].dt.date,
+        columns="TimeOnly",
+        values="Power_kW",
+        aggfunc="mean"
+    )
+else:
+    heatmap_data = filtered_df.pivot_table(
+        index=filtered_df["DateTime"].dt.date,
+        columns="TimeOnly",
+        values="Power_kW",
+        aggfunc="max"
+    )
+
+fig_hm, ax_hm = plt.subplots(figsize=(16, 6))
+im = ax_hm.imshow(heatmap_data, aspect="auto")
+ax_hm.set_title(heatmap_metric + " by Date and Time")
+ax_hm.set_xlabel("Time of Day")
+ax_hm.set_ylabel("Date")
+
+# reduce x labels so they are readable
+x_positions = range(0, len(heatmap_data.columns), 4)
+x_labels = [heatmap_data.columns[i] for i in x_positions]
+ax_hm.set_xticks(x_positions)
+ax_hm.set_xticklabels(x_labels, rotation=90)
+
+# reduce y labels so they are readable
+if len(heatmap_data.index) > 20:
+    y_positions = range(0, len(heatmap_data.index), max(1, len(heatmap_data.index) // 15))
+else:
+    y_positions = range(len(heatmap_data.index))
+
+y_labels = [str(heatmap_data.index[i]) for i in y_positions]
+ax_hm.set_yticks(y_positions)
+ax_hm.set_yticklabels(y_labels)
+
+cbar = plt.colorbar(im, ax=ax_hm)
+cbar.set_label("Power (kW)")
+
+st.pyplot(fig_hm)
 
 # -----------------------------
 # Realistic battery sizing
